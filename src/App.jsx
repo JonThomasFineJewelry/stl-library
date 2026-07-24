@@ -4,7 +4,7 @@ import FileGrid from './components/FileGrid.jsx';
 import Lightbox from './components/Lightbox.jsx';
 import MoveModal from './components/MoveModal.jsx';
 import BatchRenameModal from './components/BatchRenameModal.jsx';
-import { UploadIcon, FolderIcon, ArrowRightIcon, XIcon, PencilIcon, UndoIcon } from './components/icons.jsx';
+import { UploadIcon, FolderIcon, ArrowRightIcon, XIcon, PencilIcon, UndoIcon, CheckIcon } from './components/icons.jsx';
 import { rekeyCached, invalidateCached } from './lib/geometryCache.js';
 import './App.css';
 
@@ -22,6 +22,7 @@ export default function App() {
   const [notes, setNotes] = useState({});
   const [lastAction, setLastAction] = useState(null); // { description, undo: async () => {} }
   const [error, setError] = useState('');
+  const [updateReady, setUpdateReady] = useState(null); // { version }
   const undoTimerRef = useRef(null);
 
   const refreshTree = useCallback(async () => {
@@ -59,6 +60,14 @@ export default function App() {
     });
     return off;
   }, [selectedFolder, refreshTree, refreshFiles]);
+
+  useEffect(() => {
+    if (!window.api.onUpdateStatus) return undefined;
+    const off = window.api.onUpdateStatus((payload) => {
+      if (payload.state === 'downloaded') setUpdateReady({ version: payload.version });
+    });
+    return off;
+  }, []);
 
   const showError = (e) => setError(typeof e === 'string' ? e : e?.message || String(e));
 
@@ -258,6 +267,18 @@ export default function App() {
           <FolderIcon /> Change Library Folder…
         </button>
       </div>
+
+      {updateReady && (
+        <div className="update-banner">
+          <span>Version {updateReady.version} is ready to install.</span>
+          <button className="primary" onClick={() => window.api.installUpdate()}>
+            <CheckIcon /> Restart & Update
+          </button>
+          <button onClick={() => setUpdateReady(null)}>
+            <XIcon /> Later
+          </button>
+        </div>
+      )}
 
       <div className="main-layout">
         <div className="sidebar">

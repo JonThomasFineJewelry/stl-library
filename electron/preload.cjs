@@ -16,9 +16,16 @@ contextBridge.exposeInMainWorld('api', {
   importFiles: (destDirRelPath) => ipcRenderer.invoke('file:import', destDirRelPath),
   getNotes: () => ipcRenderer.invoke('notes:get'),
   setNote: (relPath, text) => ipcRenderer.invoke('notes:set', relPath, text),
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
+  installUpdate: () => ipcRenderer.invoke('update:install'),
   onLibraryChanged: (callback) => {
     const listener = () => callback();
     ipcRenderer.on('library:changed', listener);
     return () => ipcRenderer.removeListener('library:changed', listener);
+  },
+  onUpdateStatus: (callback) => {
+    const listener = (_evt, payload) => callback(payload);
+    ipcRenderer.on('update:status', listener);
+    return () => ipcRenderer.removeListener('update:status', listener);
   },
 });

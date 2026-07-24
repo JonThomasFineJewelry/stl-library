@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const { autoUpdater } = require('electron-updater');
 
 const DEFAULT_LIBRARY_ROOT = path.join(app.getPath('desktop'), 'STL Library');
 const DEFAULT_WATCH_SOURCE = path.join(app.getPath('desktop'), 'STL FILES');
@@ -396,6 +397,34 @@ function registerIpcHandlers() {
     saveNotes(notes);
     return { ok: true };
   });
+
+  ipcMain.handle('app:getVersion', () => app.getVersion());
+
+  ipcMain.handle('update:install', () => {
+    autoUpdater.quitAndInstall();
+  });
+}
+
+function setupAutoUpdater(win) {
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  const send = (channel, payload) => {
+    if (!win.isDestroyed()) win.webContents.send(channel, payload);
+  };
+
+  autoUpdater.on('update-downloaded', (info) => {
+    send('update:status', { state: 'downloaded', version: info.version });
+  });
+  autoUpdater.on('error', (err) => {
+    console.error('Auto-update error:', err);
+  });
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('Update check failed:', err);
+  });
 }
 
 function createWindow() {
@@ -426,6 +455,8 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
+
+  return win;
 }
 
 app.whenReady().then(async () => {
@@ -433,8 +464,9 @@ app.whenReady().then(async () => {
   ensureLibraryRoot();
   registerIpcHandlers();
   await syncNewFilesFromSource();
-  createWindow();
+  const win = createWindow();
   startSourceWatcher();
+  setupAutoUpdater(win);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
