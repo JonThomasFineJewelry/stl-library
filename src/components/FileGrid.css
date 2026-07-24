@@ -1,0 +1,12 @@
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.grid-empty {
+  padding: 40px;
+  color: var(--text-dim);
+  text-align: center;
+}

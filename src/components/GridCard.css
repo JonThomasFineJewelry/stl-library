@@ -1,0 +1,208 @@
+.grid-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.grid-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.grid-card-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.grid-card-thumb {
+  position: relative;
+  height: 190px;
+  flex-shrink: 0;
+  background: #ffffff;
+  touch-action: none;
+}
+
+.grid-card-placeholder {
+  width: 100%;
+  height: 100%;
+}
+
+.grid-card-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 12px;
+}
+
+.grid-card-error {
+  color: var(--danger);
+}
+
+.grid-card-hint {
+  position: absolute;
+  bottom: 4px;
+  right: 6px;
+  font-size: 10px;
+  color: #888;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.grid-card-thumb:hover .grid-card-hint {
+  opacity: 0.85;
+}
+
+.grid-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(32, 32, 32, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f2f2f2;
+  opacity: 0;
+  transition: opacity 0.15s, background-color 0.1s;
+}
+
+.grid-card-thumb:hover .grid-card-delete {
+  opacity: 1;
+}
+
+.grid-card-delete:hover {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: white;
+}
+
+.grid-card-meta {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grid-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid-card-rename-form {
+  flex: 1;
+  min-width: 0;
+}
+
+.grid-card-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid-card-note-btn {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-dim);
+  box-shadow: none;
+}
+
+.grid-card-note-btn:hover {
+  background: var(--bg-hover);
+}
+
+.grid-card-note-btn.has-note {
+  color: var(--accent);
+}
+
+.grid-card-note-input {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  resize: none;
+}
+
+.grid-card-note-input:focus {
+  outline: none;
+}
+
+.grid-card-note-preview {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.grid-card-sublabel {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: -4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grid-card-meta input {
+  width: 100%;
+}
+
+.grid-card-stats {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.grid-card-stats dt {
+  color: var(--text-dim);
+}
+
+.grid-card-stats dd {
+  margin: 0;
+  text-align: right;
+}
+
+.grid-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.grid-card-actions button {
+  flex: 1;
+  padding: 6px 6px;
+  font-size: 11.5px;
+  gap: 4px;
+}

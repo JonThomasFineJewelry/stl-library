@@ -1,0 +1,177 @@
+:root {
+  /* Fluent neutral surfaces (Windows 11 dark theme) */
+  --bg: transparent;
+  --bg-solid: #202020;
+  --bg-elevated: #2c2c2c;
+  --bg-card: rgba(255, 255, 255, 0.0512);
+  --bg-hover: rgba(255, 255, 255, 0.0605);
+  --bg-active: rgba(255, 255, 255, 0.0419);
+  --border: rgba(255, 255, 255, 0.0837);
+  --border-strong: rgba(255, 255, 255, 0.1435);
+
+  /* Fluent text tokens */
+  --text: rgba(255, 255, 255, 0.9333);
+  --text-dim: rgba(255, 255, 255, 0.6063);
+  --text-disabled: rgba(255, 255, 255, 0.3628);
+
+  /* Fluent system accent (Windows default blue ramp) */
+  --accent: #0078d4;
+  --accent-hover: #106ebe;
+  --accent-pressed: #005a9e;
+  --accent-soft: rgba(0, 120, 212, 0.16);
+
+  --danger: #c42b1c;
+  --danger-hover: #d13438;
+
+  /* Corner radius scale: 8px controls, 4px interior elements */
+  --radius: 8px;
+  --radius-sm: 4px;
+
+  --font-sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.36);
+  --shadow-flyout: 0 8px 16px rgba(0, 0, 0, 0.28), 0 0 2px rgba(0, 0, 0, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.44;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background-color 0.08s cubic-bezier(0.33, 0, 0.67, 1), border-color 0.08s ease;
+}
+
+button:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+button:active {
+  background: var(--bg-active);
+  color: var(--text-dim);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+button.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button.primary:active {
+  background: var(--accent-pressed);
+  border-color: var(--accent-pressed);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+button.danger {
+  border-color: var(--border);
+  color: #ff99a4;
+}
+
+button.danger:hover {
+  background: rgba(196, 43, 28, 0.15);
+  border-color: var(--danger);
+}
+
+button.icon-btn {
+  padding: 6px;
+  border-radius: var(--radius-sm);
+}
+
+button:disabled {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.0419);
+  border-color: var(--border);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+input[type="text"]:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 1px;
+}
+
+input[type="text"] {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  transition: border-color 0.08s ease;
+}
+
+input[type="text"]:hover {
+  border-color: var(--border-strong);
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--border);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 5px;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.34);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

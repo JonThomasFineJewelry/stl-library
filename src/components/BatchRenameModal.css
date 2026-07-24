@@ -1,0 +1,70 @@
+.batch-rename-modal {
+  width: 520px;
+  max-height: 80vh;
+}
+
+.batch-rename-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.batch-rename-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.batch-rename-fields input {
+  width: 100%;
+}
+
+.batch-rename-preview {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  max-height: 260px;
+}
+
+.batch-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  opacity: 0.5;
+}
+
+.batch-rename-row.changed {
+  opacity: 1;
+  background: var(--accent-soft);
+}
+
+.batch-rename-old {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+
+.batch-rename-arrow {
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+
+.batch-rename-new {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
