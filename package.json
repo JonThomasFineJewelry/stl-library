@@ -1,7 +1,7 @@
 {
   "name": "stl-library",
   "productName": "STL Library",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Browse, view, and organize STL model files",
   "main": "electron/main.cjs",
   "author": "Jon Thomas Fine Jewelry",

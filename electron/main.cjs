@@ -107,6 +107,33 @@ function buildTree(absDir) {
   return node;
 }
 
+function collectFilesRecursive(dir) {
+  let entries = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const files = entries
+    .filter((e) => e.isFile() && MODEL_EXTENSIONS.has(path.extname(e.name).toLowerCase()))
+    .map((e) => {
+      const abs = path.join(dir, e.name);
+      const stat = fs.statSync(abs);
+      return {
+        name: e.name,
+        relPath: toRelPath(abs),
+        size: stat.size,
+        mtime: stat.mtimeMs,
+        ext: path.extname(e.name).toLowerCase(),
+      };
+    });
+  const subDirs = entries.filter((e) => e.isDirectory() && !e.name.startsWith('.'));
+  subDirs.forEach((d) => {
+    files.push(...collectFilesRecursive(path.join(dir, d.name)));
+  });
+  return files;
+}
+
 function ensureLibraryRoot() {
   if (!fs.existsSync(config.libraryRoot)) {
     fs.mkdirSync(config.libraryRoot, { recursive: true });
@@ -245,19 +272,17 @@ function registerIpcHandlers() {
     // it, since anything filed into a category has been deliberately sorted out of
     // that bucket. Every other (sub)category rolls up files from its subcategories
     // too, so viewing a parent category shows everything filed under it.
-    const recursive = relPath !== '';
-
-    function collect(dir) {
+    if (relPath === '') {
       let entries = [];
       try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
+        entries = fs.readdirSync(absDir, { withFileTypes: true });
       } catch {
         return [];
       }
-      const files = entries
+      return entries
         .filter((e) => e.isFile() && MODEL_EXTENSIONS.has(path.extname(e.name).toLowerCase()))
         .map((e) => {
-          const abs = path.join(dir, e.name);
+          const abs = path.join(absDir, e.name);
           const stat = fs.statSync(abs);
           return {
             name: e.name,
@@ -266,16 +291,19 @@ function registerIpcHandlers() {
             mtime: stat.mtimeMs,
             ext: path.extname(e.name).toLowerCase(),
           };
-        });
-      if (!recursive) return files;
-      const subDirs = entries.filter((e) => e.isDirectory() && !e.name.startsWith('.'));
-      subDirs.forEach((d) => {
-        files.push(...collect(path.join(dir, d.name)));
-      });
-      return files;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
     }
+    return collectFilesRecursive(absDir).sort((a, b) => a.name.localeCompare(b.name));
+  });
 
-    return collect(absDir).sort((a, b) => a.name.localeCompare(b.name));
+  ipcMain.handle('search:query', (_evt, query) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    ensureLibraryRoot();
+    return collectFilesRecursive(path.resolve(config.libraryRoot))
+      .filter((f) => f.name.toLowerCase().includes(q) || (notes[f.relPath] || '').toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
 
   ipcMain.handle('file:read', (_evt, relPath) => {

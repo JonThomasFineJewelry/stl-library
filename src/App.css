@@ -24,6 +24,7 @@
 
 .titlebar-path {
   flex: 1;
+  min-width: 0;
   color: var(--text-dim);
   font-size: 12.5px;
   overflow: hidden;
@@ -33,6 +34,56 @@
 
 .titlebar button {
   -webkit-app-region: no-drag;
+}
+
+.titlebar-search {
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+  width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 10px;
+  color: var(--text-dim);
+}
+
+.titlebar-search:focus-within {
+  border-color: var(--accent);
+}
+
+.titlebar-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 7px 0;
+}
+
+.titlebar-search-clear {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.titlebar-search-clear:hover {
+  background: var(--bg-hover);
+}
+
+.search-results-header {
+  padding: 16px 20px 0;
+  color: var(--text-dim);
+  font-size: 13px;
 }
 
 .update-banner {

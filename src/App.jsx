@@ -4,11 +4,16 @@ import FileGrid from './components/FileGrid.jsx';
 import Lightbox from './components/Lightbox.jsx';
 import MoveModal from './components/MoveModal.jsx';
 import BatchRenameModal from './components/BatchRenameModal.jsx';
-import { UploadIcon, FolderIcon, ArrowRightIcon, XIcon, PencilIcon, UndoIcon, CheckIcon } from './components/icons.jsx';
+import { UploadIcon, FolderIcon, ArrowRightIcon, XIcon, PencilIcon, UndoIcon, CheckIcon, SearchIcon } from './components/icons.jsx';
 import { rekeyCached, invalidateCached } from './lib/geometryCache.js';
 import './App.css';
 
 const baseName = (name) => name.replace(/\.[^.]+$/, '');
+
+const dirnameOfRelPath = (relPath) => {
+  const idx = relPath.lastIndexOf('/');
+  return idx === -1 ? '' : relPath.slice(0, idx);
+};
 
 export default function App() {
   const [libraryRoot, setLibraryRoot] = useState('');
@@ -23,7 +28,13 @@ export default function App() {
   const [lastAction, setLastAction] = useState(null); // { description, undo: async () => {} }
   const [error, setError] = useState('');
   const [updateReady, setUpdateReady] = useState(null); // { version }
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
   const undoTimerRef = useRef(null);
+  const searchDebounceRef = useRef(null);
+
+  const isSearching = searchQuery.trim().length > 0;
+  const displayedFiles = isSearching ? searchResults || [] : files;
 
   const refreshTree = useCallback(async () => {
     const t = await window.api.getTree();
@@ -34,6 +45,15 @@ export default function App() {
     const list = await window.api.listFiles(folderRelPath);
     setFiles(list);
   }, []);
+
+  const refreshCurrentView = useCallback(async () => {
+    if (searchQuery.trim()) {
+      const results = await window.api.search(searchQuery);
+      setSearchResults(results);
+    } else {
+      await refreshFiles(selectedFolder);
+    }
+  }, [searchQuery, selectedFolder, refreshFiles]);
 
   useEffect(() => {
     (async () => {
@@ -56,10 +76,10 @@ export default function App() {
     if (!window.api.onLibraryChanged) return undefined;
     const off = window.api.onLibraryChanged(() => {
       refreshTree();
-      refreshFiles(selectedFolder);
+      refreshCurrentView();
     });
     return off;
-  }, [selectedFolder, refreshTree, refreshFiles]);
+  }, [refreshTree, refreshCurrentView]);
 
   useEffect(() => {
     if (!window.api.onUpdateStatus) return undefined;
@@ -68,6 +88,24 @@ export default function App() {
     });
     return off;
   }, []);
+
+  useEffect(() => {
+    clearTimeout(searchDebounceRef.current);
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return undefined;
+    }
+    searchDebounceRef.current = setTimeout(async () => {
+      const results = await window.api.search(searchQuery);
+      setSearchResults(results);
+    }, 250);
+    return () => clearTimeout(searchDebounceRef.current);
+  }, [searchQuery]);
+
+  const handleSelectFolder = (relPath) => {
+    setSearchQuery('');
+    setSelectedFolder(relPath);
+  };
 
   const showError = (e) => setError(typeof e === 'string' ? e : e?.message || String(e));
 
@@ -84,7 +122,7 @@ export default function App() {
     setLastAction(null);
     try {
       await action.undo();
-      await refreshFiles(selectedFolder);
+      await refreshCurrentView();
       await refreshTree();
     } catch (e) {
       showError(e);
@@ -104,7 +142,7 @@ export default function App() {
       const previousName = baseName(file.name);
       const result = await window.api.renameFile(file.relPath, newName);
       rekeyCached(file.relPath, result.relPath);
-      await refreshFiles(selectedFolder);
+      await refreshCurrentView();
       announceUndo(`Renamed "${previousName}" to "${newName}"`, async () => {
         const back = await window.api.renameFile(result.relPath, previousName);
         rekeyCached(result.relPath, back.relPath);
@@ -132,7 +170,7 @@ export default function App() {
     try {
       const result = await window.api.deleteFile(file.relPath);
       invalidateCached(file.relPath);
-      await refreshFiles(selectedFolder);
+      await refreshCurrentView();
       await refreshTree();
       setExpandedFile((f) => (f && f.relPath === file.relPath ? null : f));
       setSelectedFiles((prev) => {
@@ -159,13 +197,16 @@ export default function App() {
   };
 
   const handleMoveSelected = () => {
-    const toMove = files.filter((f) => selectedFiles.has(f.relPath));
+    const toMove = displayedFiles.filter((f) => selectedFiles.has(f.relPath));
     if (toMove.length === 0) return;
-    setMoveQueue({ files: toMove, sourceFolder: selectedFolder });
+    // When files come from search results they may span several categories, so
+    // there's no single "current folder" to compare the destination against.
+    const sameFolder = !isSearching ? selectedFolder : null;
+    setMoveQueue({ files: toMove, sourceFolder: sameFolder });
   };
 
   const handleBatchRenameSelected = () => {
-    const toRename = files.filter((f) => selectedFiles.has(f.relPath));
+    const toRename = displayedFiles.filter((f) => selectedFiles.has(f.relPath));
     if (toRename.length === 0) return;
     setBatchRenameQueue(toRename);
   };
@@ -187,7 +228,7 @@ export default function App() {
     try {
       const result = await window.api.importFiles(selectedFolder);
       if (result.imported.length > 0) {
-        await refreshFiles(selectedFolder);
+        await refreshCurrentView();
         await refreshTree();
         const importedPaths = result.imported;
         announceUndo(`Imported ${importedPaths.length} file(s)`, async () => {
@@ -207,11 +248,12 @@ export default function App() {
     try {
       const reversals = [];
       for (const f of moveQueue.files) {
+        const originalFolder = dirnameOfRelPath(f.relPath);
         const result = await window.api.moveFile(f.relPath, destRelPath);
         rekeyCached(f.relPath, result.relPath);
-        reversals.push({ newRelPath: result.relPath, originalFolder: moveQueue.sourceFolder });
+        reversals.push({ newRelPath: result.relPath, originalFolder });
       }
-      await refreshFiles(selectedFolder);
+      await refreshCurrentView();
       await refreshTree();
       const movedPaths = new Set(moveQueue.files.map((f) => f.relPath));
       setSelectedFiles((prev) => {
@@ -242,7 +284,7 @@ export default function App() {
         reversals.push({ newRelPath: result.relPath, previousName });
       }
       setBatchRenameQueue(null);
-      await refreshFiles(selectedFolder);
+      await refreshCurrentView();
       setSelectedFiles(new Set());
       announceUndo(`Renamed ${reversals.length} file(s)`, async () => {
         for (const r of reversals) {
@@ -259,6 +301,20 @@ export default function App() {
     <div className="app">
       <div className="titlebar">
         <span className="titlebar-title">STL Library</span>
+        <div className="titlebar-search">
+          <SearchIcon />
+          <input
+            type="text"
+            placeholder="Search all files and notes…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {isSearching && (
+            <button className="icon-btn titlebar-search-clear" onClick={() => setSearchQuery('')} title="Clear search">
+              <XIcon />
+            </button>
+          )}
+        </div>
         <span className="titlebar-path" title={libraryRoot}>{libraryRoot}</span>
         <button className="primary" onClick={handleImport} title="Import STL files from anywhere on your computer">
           <UploadIcon /> Import From Computer
@@ -285,7 +341,7 @@ export default function App() {
           <CategoryTree
             tree={tree}
             selectedFolder={selectedFolder}
-            onSelect={setSelectedFolder}
+            onSelect={handleSelectFolder}
             onChanged={refreshTree}
             onError={showError}
             onMoveAll={handleMoveAllInCategory}
@@ -293,9 +349,17 @@ export default function App() {
         </div>
 
         <div className="content">
+          {isSearching && (
+            <div className="search-results-header">
+              {searchResults === null
+                ? 'Searching…'
+                : `${searchResults.length} result${searchResults.length === 1 ? '' : 's'} for "${searchQuery}"`}
+            </div>
+          )}
           <FileGrid
-            files={files}
+            files={displayedFiles}
             selectedFolder={selectedFolder}
+            searchMode={isSearching}
             selectedRelPaths={selectedFiles}
             notes={notes}
             onRename={handleRename}

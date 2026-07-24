@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
   chooseLibraryRoot: () => ipcRenderer.invoke('config:chooseLibraryRoot'),
   getTree: () => ipcRenderer.invoke('tree:get'),
   listFiles: (relPath) => ipcRenderer.invoke('files:list', relPath),
+  search: (query) => ipcRenderer.invoke('search:query', query),
   readFile: (relPath) => ipcRenderer.invoke('file:read', relPath),
   renameFile: (relPath, newName) => ipcRenderer.invoke('file:rename', relPath, newName),
   moveFile: (relPath, destDirRelPath) => ipcRenderer.invoke('file:move', relPath, destDirRelPath),

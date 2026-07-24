@@ -32,6 +32,7 @@ function TrashIcon() {
 export default function GridCard({
   file,
   selectedFolder,
+  searchMode,
   isSelected,
   note,
   onRename,
@@ -49,7 +50,8 @@ export default function GridCard({
 
   const slashIdx = file.relPath.lastIndexOf('/');
   const fileDir = slashIdx === -1 ? '' : file.relPath.slice(0, slashIdx);
-  const subLabel = fileDir !== (selectedFolder || '') ? fileDir.split('/').pop() : null;
+  const showLocation = searchMode || fileDir !== (selectedFolder || '');
+  const subLabel = showLocation ? fileDir.split('/').pop() || 'Uncategorized' : null;
 
   const submitRename = (e) => {
     e.preventDefault();
@@ -118,7 +120,7 @@ export default function GridCard({
         </div>
 
         {subLabel && (
-          <div className="grid-card-sublabel" title={`Filed in ${fileDir}`}>
+          <div className="grid-card-sublabel" title={`Filed in ${fileDir || 'Uncategorized'}`}>
             in {subLabel}
           </div>
         )}

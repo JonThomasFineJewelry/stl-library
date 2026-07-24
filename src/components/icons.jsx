@@ -99,6 +99,15 @@ export function NoteIcon() {
   );
 }
 
+export function SearchIcon() {
+  return (
+    <svg {...base}>
+      <circle cx="7" cy="7" r="4.5" {...strokeProps} />
+      <path d="M10.3 10.3 14 14" {...strokeProps} />
+    </svg>
+  );
+}
+
 export function UndoIcon() {
   return (
     <svg {...base}>
