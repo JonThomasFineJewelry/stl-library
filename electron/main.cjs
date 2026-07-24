@@ -35,7 +35,13 @@ function saveConfig(config) {
 
 let config = loadConfig();
 
+// Notes live inside the library folder itself (not per-computer userData) so
+// they travel with the library when it's a shared/network folder.
 function getNotesPath() {
+  return path.join(config.libraryRoot, '.stl-library-notes.json');
+}
+
+function getLegacyNotesPath() {
   return path.join(app.getPath('userData'), 'notes.json');
 }
 
@@ -43,12 +49,25 @@ function loadNotes() {
   try {
     return JSON.parse(fs.readFileSync(getNotesPath(), 'utf-8'));
   } catch {
-    return {};
+    // Fall back to the old per-computer location and migrate it forward, so
+    // nobody loses notes written before this became shared-folder-based.
+    try {
+      const legacy = JSON.parse(fs.readFileSync(getLegacyNotesPath(), 'utf-8'));
+      saveNotes(legacy);
+      return legacy;
+    } catch {
+      return {};
+    }
   }
 }
 
-function saveNotes(notes) {
-  fs.writeFileSync(getNotesPath(), JSON.stringify(notes, null, 2), 'utf-8');
+function saveNotes(notesObj) {
+  try {
+    fs.mkdirSync(config.libraryRoot, { recursive: true });
+    fs.writeFileSync(getNotesPath(), JSON.stringify(notesObj, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to save notes:', err);
+  }
 }
 
 let notes = loadNotes();
@@ -245,6 +264,32 @@ function startSourceWatcher() {
   }
 }
 
+let libraryWatcher = null;
+let libraryWatchDebounce = null;
+
+function startLibraryWatcher() {
+  if (libraryWatcher) {
+    try {
+      libraryWatcher.close();
+    } catch {
+      // already closed
+    }
+    libraryWatcher = null;
+  }
+  if (!fs.existsSync(config.libraryRoot)) return;
+  try {
+    libraryWatcher = fs.watch(config.libraryRoot, { recursive: true }, () => {
+      clearTimeout(libraryWatchDebounce);
+      libraryWatchDebounce = setTimeout(() => {
+        notes = loadNotes();
+        notifyLibraryChanged();
+      }, 800);
+    });
+  } catch (err) {
+    console.error('Failed to watch library folder for live sync:', err);
+  }
+}
+
 function registerIpcHandlers() {
   ipcMain.handle('config:get', () => config);
 
@@ -258,6 +303,8 @@ function registerIpcHandlers() {
     if (result.canceled || !result.filePaths[0]) return config;
     config = { ...config, libraryRoot: result.filePaths[0] };
     saveConfig(config);
+    notes = loadNotes();
+    startLibraryWatcher();
     return config;
   });
 
@@ -494,6 +541,7 @@ app.whenReady().then(async () => {
   await syncNewFilesFromSource();
   const win = createWindow();
   startSourceWatcher();
+  startLibraryWatcher();
   setupAutoUpdater(win);
 
   app.on('activate', () => {

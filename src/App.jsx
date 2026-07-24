@@ -74,9 +74,10 @@ export default function App() {
 
   useEffect(() => {
     if (!window.api.onLibraryChanged) return undefined;
-    const off = window.api.onLibraryChanged(() => {
+    const off = window.api.onLibraryChanged(async () => {
       refreshTree();
       refreshCurrentView();
+      setNotes(await window.api.getNotes());
     });
     return off;
   }, [refreshTree, refreshCurrentView]);
